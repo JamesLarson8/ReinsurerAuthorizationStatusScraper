@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reinsurer Authorization Statuses</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f2efe8;
+      --bg-accent: #e8dfcf;
+      --panel: rgba(255, 252, 247, 0.88);
+      --panel-strong: #fffdf8;
+      --line: rgba(67, 52, 37, 0.14);
+      --line-strong: rgba(67, 52, 37, 0.24);
+      --text: #241a10;
+      --muted: #6f6354;
+      --brand: #7d2f2b;
+      --brand-soft: rgba(125, 47, 43, 0.12);
+      --good: #1f6a52;
+      --good-soft: rgba(31, 106, 82, 0.12);
+      --warn: #8e5b0f;
+      --warn-soft: rgba(142, 91, 15, 0.14);
+      --bad: #8b3022;
+      --bad-soft: rgba(139, 48, 34, 0.14);
+      --shadow: 0 22px 60px rgba(52, 35, 19, 0.12);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --font-body: "Avenir Next", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(157, 80, 73, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(161, 116, 35, 0.16), transparent 36%),
+        linear-gradient(180deg, #f7f4ee 0%, var(--bg) 55%, #ebe5d8 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(125, 47, 43, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(125, 47, 43, 0.028) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 92%);
+    }
+
+    main {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 32px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(135deg, rgba(255, 251, 245, 0.94), rgba(246, 237, 224, 0.9)),
+        var(--panel-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -70px;
+      top: -70px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(125, 47, 43, 0.18), rgba(125, 47, 43, 0));
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      max-width: 760px;
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 4vw, 4.4rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .hero-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.56);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .layout {
+      display: grid;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+    }
+
+    .summary-card {
+      padding: 20px;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .summary-value {
+      margin-top: 10px;
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3vw, 3rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .summary-detail {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    .controls {
+      padding: 20px;
+    }
+
+    .controls-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .controls-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: -0.03em;
+    }
+
+    .controls-copy {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--text);
+      font: inherit;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: rgba(125, 47, 43, 0.48);
+      box-shadow: 0 0 0 4px rgba(125, 47, 43, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 4px 14px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--good);
+      box-shadow: 0 0 0 5px rgba(31, 106, 82, 0.14);
+    }
+
+    .table-shell {
+      overflow: hidden;
+    }
+
+    .table-scroller {
+      overflow: auto;
+      border-top: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(67, 52, 37, 0.08);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: rgba(245, 238, 226, 0.96);
+      backdrop-filter: blur(14px);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      transition: background-color 180ms ease, transform 180ms ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    td:first-child {
+      min-width: 240px;
+      font-weight: 700;
+    }
+
+    .empty-cell {
+      color: rgba(111, 99, 84, 0.64);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .pill-good {
+      color: var(--good);
+      background: var(--good-soft);
+    }
+
+    .pill-warn {
+      color: var(--warn);
+      background: var(--warn-soft);
+    }
+
+    .pill-bad {
+      color: var(--bad);
+      background: var(--bad-soft);
+    }
+
+    .pill-neutral {
+      color: var(--brand);
+      background: var(--brand-soft);
+    }
+
+    .notice {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border: 1px solid rgba(139, 48, 34, 0.18);
+      border-radius: var(--radius-md);
+      background: rgba(139, 48, 34, 0.08);
+      color: var(--bad);
+      line-height: 1.5;
+    }
+
+    .notice.is-visible {
+      display: block;
+    }
+
+    .notice-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-button {
+      appearance: none;
+      border: 1px solid rgba(125, 47, 43, 0.2);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--brand);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 10px 14px;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    }
+
+    .action-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 47, 43, 0.38);
+      box-shadow: 0 10px 24px rgba(52, 35, 19, 0.08);
+    }
+
+    .action-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(125, 47, 43, 0.1);
+    }
+
+    .mobile-cards {
+      display: none;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .mobile-row {
+      padding: 16px;
+      border: 1px solid rgba(67, 52, 37, 0.08);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .mobile-row h3 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    .mobile-pairs {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mobile-pair {
+      display: grid;
+      gap: 4px;
+    }
+
+    .mobile-pair strong {
+      color: var(--muted);
+      font-size: 0.76rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 20px 20px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .table-footer code {
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1080px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      main {
+        width: min(100% - 20px, 100%);
+        padding-top: 16px;
+      }
+
+      .hero,
+      .controls {
+        padding: 18px;
+      }
+
+      .summary-grid,
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .controls-header,
+      .table-footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .table-scroller {
+        display: none;
+      }
+
+      .mobile-cards {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Florida Reinsurance Monitor</div>
+      <h1>Reinsurer authorization statuses</h1>
+    </section>
+
+    <section class="layout summary-grid" aria-label="Summary">
+      <article class="card summary-card">
+        <div class="summary-label">Visible Reinsurers</div>
+        <div class="summary-value" id="visible-count">0</div>
+        <div class="summary-detail" id="visible-detail">Waiting for data.</div>
+      </article>
+      <article class="card summary-card">
+        <div class="summary-label">Last Refresh</div>
+        <div class="summary-value" id="refresh-time">--</div>
+        <div class="summary-detail" id="refresh-detail">Attempting initial load.</div>
+      </article>
+    </section>
+
+    <section class="card controls" aria-label="Filters">
+      <div class="controls-header">
+        <div>
+          <h2 class="controls-title">Filter and review</h2>
+          <p class="controls-copy">
+            Search across all visible fields, narrow by category or state, and sort by the most relevant column available.
+          </p>
+        </div>
+        <div class="status-badge">
+          <span class="dot"></span>
+          <span id="load-state">Loading latest CSV</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="field">
+          <label for="search-input">Search</label>
+          <input id="search-input" type="search" placeholder="Company, state, jurisdiction, notes">
+        </div>
+        <div class="field">
+          <label for="category-filter">Category</label>
+          <select id="category-filter">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="state-filter">State</label>
+          <select id="state-filter">
+            <option value="">All states</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sort-select">Sort by</label>
+          <select id="sort-select"></select>
+        </div>
+      </div>
+
+      <div class="notice" id="error-notice" role="alert">
+        <div id="error-message"></div>
+        <div class="notice-actions">
+          <button class="action-button hidden" id="pick-file-button" type="button">Choose local CSV</button>
+          <button class="action-button hidden" id="reload-button" type="button">Retry load</button>
+          <input class="hidden" id="file-input" type="file" accept=".csv,text/csv">
+        </div>
+      </div>
+    </section>
+
+    <section class="card table-shell" aria-label="Authorization table">
+      <div class="status-line">
+        <div id="result-copy">No rows loaded yet.</div>
+        <div id="column-copy">Columns will appear after the CSV loads.</div>
+      </div>
+
+      <div class="table-scroller">
+        <table>
+          <thead>
+            <tr id="table-head"></tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="mobile-cards" id="mobile-cards"></div>
+
+      <div class="table-footer">
+        <span id="footer-copy">Defensive parsing enabled for quoted CSV values, blank fields, and future column changes.</span>
+        <span>Auto-refresh source: <code id="footer-file">floir_reinsurer_authorization_status_florida.csv</code></span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const CSV_FILE = "floir_reinsurer_authorization_status_florida.csv";
+    const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
+    const PRIORITY_COLUMNS = [
+      "reinsurer",
+      "authorization_category",
+      "authorization_status",
+      "state",
+      "jurisdiction",
+      "years",
+      "lines",
+      "source_section",
+      "notes"
+    ];
+
+    const elements = {
+      sourceFile: document.getElementById("source-file"),
+      footerFile: document.getElementById("footer-file"),
+      loadState: document.getElementById("load-state"),
+      errorNotice: document.getElementById("error-notice"),
+      errorMessage: document.getElementById("error-message"),
+      visibleCount: document.getElementById("visible-count"),
+      visibleDetail: document.getElementById("visible-detail"),
+      refreshTime: document.getElementById("refresh-time"),
+      refreshDetail: document.getElementById("refresh-detail"),
+      resultCopy: document.getElementById("result-copy"),
+      columnCopy: document.getElementById("column-copy"),
+      tableHead: document.getElementById("table-head"),
+      tableBody: document.getElementById("table-body"),
+      mobileCards: document.getElementById("mobile-cards"),
+      searchInput: document.getElementById("search-input"),
+      categoryFilter: document.getElementById("category-filter"),
+      stateFilter: document.getElementById("state-filter"),
+      sortSelect: document.getElementById("sort-select"),
+      footerCopy: document.getElementById("footer-copy"),
+      pickFileButton: document.getElementById("pick-file-button"),
+      reloadButton: document.getElementById("reload-button"),
+      fileInput: document.getElementById("file-input")
+    };
+
+    const state = {
+      rows: [],
+      headers: [],
+      displayHeaders: [],
+      filters: {
+        search: "",
+        category: "",
+        state: "",
+        sort: ""
+      },
+      lastSignature: "",
+      refreshTimer: null,
+      localFileHandle: null,
+      localFileName: ""
+    };
+
+    if (elements.sourceFile) {
+      elements.sourceFile.textContent = CSV_FILE;
+    }
+    if (elements.footerFile) {
+      elements.footerFile.textContent = CSV_FILE;
+    }
+
+    function normalizeHeader(header) {
+      return String(header || "")
+        .replace(/^\uFEFF/, "")
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^\w]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_|_$/g, "")
+        .toLowerCase();
+    }
+
+    function prettyLabel(header) {
+      const text = String(header || "").replace(/_/g, " ").trim();
+      if (!text) {
+        return "Unknown";
+      }
+
+      return text.replace(/\b\w/g, (letter) => letter.toUpperCase());
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let current = "";
+      let row = [];
+      let inQuotes = false;
+
+      for (let index = 0; index < text.length; index += 1) {
+        const char = text[index];
+        const next = text[index + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            current += '"';
+            index += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (char === "," && !inQuotes) {
+          row.push(current);
+          current = "";
+          continue;
+        }
+
+        if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") {
+            index += 1;
+          }
+          row.push(current);
+          current = "";
+          if (row.some((cell) => cell.trim() !== "")) {
+            rows.push(row);
+          }
+          row = [];
+          continue;
+        }
+
+        current += char;
+      }
+
+      if (current !== "" || row.length > 0) {
+        row.push(current);
+        if (row.some((cell) => cell.trim() !== "")) {
+          rows.push(row);
+        }
+      }
+
+      return rows;
+    }
+
+    function buildHeaders(rawHeaders, maxColumnCount) {
+      const seen = new Map();
+      const normalized = [];
+
+      for (let index = 0; index < maxColumnCount; index += 1) {
+        const rawValue = rawHeaders[index] || `column_${index + 1}`;
+        let header = normalizeHeader(rawValue) || `column_${index + 1}`;
+
+        if (seen.has(header)) {
+          const nextCount = seen.get(header) + 1;
+          seen.set(header, nextCount);
+          header = `${header}_${nextCount}`;
+        } else {
+          seen.set(header, 1);
+        }
+
+        normalized.push(header);
+      }
+
+      return normalized;
+    }
+
+    function statusTone(value) {
+      const text = String(value || "").toLowerCase();
+      if (!text) {
+        return "neutral";
+      }
+      if (/(certified|secure|authorized|approved|active|eligible)/.test(text)) {
+        return "good";
+      }
+      if (/(pending|watch|limited|conditional|probation|review)/.test(text)) {
+        return "warn";
+      }
+      if (/(suspended|revoked|withdrawn|inactive|denied|ceased|not authorized)/.test(text)) {
+        return "bad";
+      }
+      return "neutral";
+    }
+
+    function pillMarkup(value) {
+      const tone = statusTone(value);
+      return `<span class="pill pill-${tone}">${escapeHtml(value || "Not provided")}</span>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function detectHeader(possibleHeaders, rows) {
+      if (possibleHeaders.length === 0) {
+        return { headers: [], dataRows: [] };
+      }
+
+      const headerIndicators = ["reinsurer", "status", "category", "state", "jurisdiction", "notes", "source"];
+      const normalized = possibleHeaders.map(normalizeHeader);
+      const score = normalized.filter((value) => headerIndicators.some((indicator) => value.includes(indicator))).length;
+
+      if (score > 0) {
+        return { headers: possibleHeaders, dataRows: rows.slice(1) };
+      }
+
+      const generated = possibleHeaders.map((_, index) => `column_${index + 1}`);
+      return { headers: generated, dataRows: rows };
+    }
+
+    function ingestCsv(text) {
+      const parsedRows = parseCsv(text);
+      if (parsedRows.length === 0) {
+        return { rows: [], headers: [] };
+      }
+
+      const firstRow = parsedRows[0];
+      const maxColumnCount = parsedRows.reduce((count, row) => Math.max(count, row.length), firstRow.length);
+      const { headers: headerRow, dataRows } = detectHeader(firstRow, parsedRows);
+      const headers = buildHeaders(headerRow, maxColumnCount);
+
+      const rows = dataRows
+        .map((row, rowIndex) => {
+          const record = { __index: rowIndex };
+          headers.forEach((header, headerIndex) => {
+            record[header] = (row[headerIndex] || "").trim();
+          });
+          return record;
+        })
+        .filter((record) => headers.some((header) => (record[header] || "").trim() !== ""));
+
+      return { rows, headers };
+    }
+
+    function preferredHeaders(headers) {
+      const prioritized = PRIORITY_COLUMNS.filter((header) => headers.includes(header));
+      const remaining = headers.filter((header) => !prioritized.includes(header));
+      return [...prioritized, ...remaining];
+    }
+
+    function getCategoryKey(headers) {
+      return headers.find((header) => /category/.test(header)) || "";
+    }
+
+    function getStateKey(headers) {
+      return headers.find((header) => /^state$|state/.test(header)) || "";
+    }
+
+    function getNameKey(headers) {
+      return headers.find((header) => /reinsurer|name|company|entity/.test(header)) || headers[0] || "";
+    }
+
+    function getSearchableText(row, headers) {
+      return headers.map((header) => row[header] || "").join(" ").toLowerCase();
+    }
+
+    function compareValues(aValue, bValue) {
+      return String(aValue || "").localeCompare(String(bValue || ""), undefined, {
+        numeric: true,
+        sensitivity: "base"
+      });
+    }
+
+    function applyFilters() {
+      const categoryKey = getCategoryKey(state.headers);
+      const stateKey = getStateKey(state.headers);
+      const sortKey = state.filters.sort || getNameKey(state.headers);
+
+      const filtered = state.rows
+        .filter((row) => {
+          if (state.filters.category && categoryKey && row[categoryKey] !== state.filters.category) {
+            return false;
+          }
+
+          if (state.filters.state && stateKey && row[stateKey] !== state.filters.state) {
+            return false;
+          }
+
+          if (state.filters.search) {
+            return getSearchableText(row, state.displayHeaders).includes(state.filters.search.toLowerCase());
+          }
+
+          return true;
+        })
+        .sort((left, right) => {
+          const sorted = compareValues(left[sortKey], right[sortKey]);
+          if (sorted !== 0) {
+            return sorted;
+          }
+          return left.__index - right.__index;
+        });
+
+      renderSummary(filtered);
+      renderTable(filtered);
+      renderMobileCards(filtered);
+    }
+
+    function uniqueValues(key) {
+      if (!key) {
+        return [];
+      }
+
+      return [...new Set(state.rows.map((row) => row[key]).filter(Boolean))].sort((a, b) => compareValues(a, b));
+    }
+
+    function syncSelectOptions(select, label, values, selected) {
+      const nextOptions = [`<option value="">All ${label.toLowerCase()}</option>`]
+        .concat(values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+        .join("");
+
+      select.innerHTML = nextOptions;
+      select.value = values.includes(selected) ? selected : "";
+      return select.value;
+    }
+
+    function syncSortOptions() {
+      const current = state.filters.sort;
+      const options = state.displayHeaders.map((header) => {
+        const selected = header === (current || getNameKey(state.headers)) ? ' selected' : "";
+        return `<option value="${escapeHtml(header)}"${selected}>${escapeHtml(prettyLabel(header))}</option>`;
+      });
+
+      elements.sortSelect.innerHTML = options.join("");
+      state.filters.sort = elements.sortSelect.value || getNameKey(state.headers);
+    }
+
+    function renderHead() {
+      elements.tableHead.innerHTML = state.displayHeaders
+        .map((header) => `<th scope="col">${escapeHtml(prettyLabel(header))}</th>`)
+        .join("");
+      elements.columnCopy.textContent = `${state.displayHeaders.length} column${state.displayHeaders.length === 1 ? "" : "s"} visible`;
+    }
+
+    function formatCell(header, value) {
+      if (!value) {
+        return '<span class="empty-cell">Not provided</span>';
+      }
+
+      if (/status/.test(header)) {
+        return pillMarkup(value);
+      }
+
+      return escapeHtml(value);
+    }
+
+    function renderTable(rows) {
+      if (rows.length === 0) {
+        elements.tableBody.innerHTML = `<tr><td colspan="${Math.max(state.displayHeaders.length, 1)}">No matching records.</td></tr>`;
+        return;
+      }
+
+      elements.tableBody.innerHTML = rows
+        .map((row) => {
+          const cells = state.displayHeaders.map((header) => `<td>${formatCell(header, row[header])}</td>`).join("");
+          return `<tr>${cells}</tr>`;
+        })
+        .join("");
+    }
+
+    function renderMobileCards(rows) {
+      if (rows.length === 0) {
+        elements.mobileCards.innerHTML = '<div class="mobile-row">No matching records.</div>';
+        return;
+      }
+
+      const nameKey = getNameKey(state.headers);
+      elements.mobileCards.innerHTML = rows
+        .map((row) => {
+          const pairs = state.displayHeaders
+            .filter((header) => header !== nameKey)
+            .map((header) => {
+              return `
+                <div class="mobile-pair">
+                  <strong>${escapeHtml(prettyLabel(header))}</strong>
+                  <span>${formatCell(header, row[header])}</span>
+                </div>
+              `;
+            })
+            .join("");
+
+          return `
+            <article class="mobile-row">
+              <h3>${escapeHtml(row[nameKey] || "Unnamed record")}</h3>
+              <div class="mobile-pairs">${pairs}</div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    function renderSummary(filteredRows) {
+      const visibleText = `${filteredRows.length} of ${state.rows.length} record${state.rows.length === 1 ? "" : "s"} shown`;
+
+      elements.visibleCount.textContent = String(filteredRows.length);
+      elements.visibleDetail.textContent = visibleText;
+      elements.resultCopy.textContent = visibleText;
+    }
+
+    function updateRefreshMeta(refreshedAt, signatureChanged) {
+      const formattedTime = new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(refreshedAt);
+
+      elements.refreshTime.textContent = formattedTime;
+      elements.refreshDetail.textContent = signatureChanged
+        ? "Detected a CSV change and refreshed the table."
+        : "Checked for updates and kept the current table in sync.";
+    }
+
+    function setError(message, options = {}) {
+      const { showPicker = false, showReload = true } = options;
+      elements.errorMessage.textContent = message;
+      elements.errorNotice.classList.add("is-visible");
+      elements.loadState.textContent = "CSV load issue";
+      elements.pickFileButton.classList.toggle("hidden", !showPicker);
+      elements.reloadButton.classList.toggle("hidden", !showReload);
+    }
+
+    function clearError() {
+      elements.errorMessage.textContent = "";
+      elements.errorNotice.classList.remove("is-visible");
+      elements.loadState.textContent = "Latest CSV loaded";
+      elements.pickFileButton.classList.add("hidden");
+      elements.reloadButton.classList.add("hidden");
+    }
+
+    function updateSourceLabels(fileName) {
+      const label = fileName || CSV_FILE;
+      if (elements.sourceFile) {
+        elements.sourceFile.textContent = label;
+      }
+      if (elements.footerFile) {
+        elements.footerFile.textContent = label;
+      }
+    }
+
+    async function getLocalFileText() {
+      if (state.localFileHandle && typeof state.localFileHandle.getFile === "function") {
+        const file = await state.localFileHandle.getFile();
+        state.localFileName = file.name || CSV_FILE;
+        updateSourceLabels(state.localFileName);
+        return file.text();
+      }
+
+      throw new Error("No local CSV has been selected yet.");
+    }
+
+    async function chooseLocalCsv() {
+      if (window.showOpenFilePicker) {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [
+            {
+              description: "CSV files",
+              accept: { "text/csv": [".csv"] }
+            }
+          ]
+        });
+        state.localFileHandle = handle;
+        return true;
+      }
+
+      elements.fileInput.click();
+      return false;
+    }
+
+    function loadSelectedFile(file) {
+      if (!file) {
+        return;
+      }
+
+      state.localFileHandle = {
+        async getFile() {
+          return file;
+        }
+      };
+      state.localFileName = file.name || CSV_FILE;
+      updateSourceLabels(state.localFileName);
+      loadCsv();
+    }
+
+    async function getCsvText() {
+      if (window.location.protocol === "file:") {
+        return getLocalFileText();
+      }
+
+      const response = await fetch(`${CSV_FILE}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}.`);
+      }
+      return response.text();
+    }
+
+    async function loadCsv() {
+      try {
+        const text = await getCsvText();
+        const signature = `${text.length}:${text.slice(0, 400)}`;
+        const signatureChanged = signature !== state.lastSignature;
+        state.lastSignature = signature;
+
+        const { rows, headers } = ingestCsv(text);
+        state.rows = rows;
+        state.headers = headers;
+        state.displayHeaders = preferredHeaders(headers);
+
+        clearError();
+        renderHead();
+        state.filters.category = syncSelectOptions(
+          elements.categoryFilter,
+          "Categories",
+          uniqueValues(getCategoryKey(state.headers)),
+          state.filters.category
+        );
+        state.filters.state = syncSelectOptions(
+          elements.stateFilter,
+          "States",
+          uniqueValues(getStateKey(state.headers)),
+          state.filters.state
+        );
+        syncSortOptions();
+        applyFilters();
+        updateRefreshMeta(new Date(), signatureChanged);
+        elements.footerCopy.textContent = `Defensive parsing enabled for ${state.rows.length} rows, ${state.displayHeaders.length} columns, quoted CSV values, blank fields, and future column changes.`;
+      } catch (error) {
+        if (window.location.protocol === "file:") {
+          setError(
+            "This page is being opened directly from disk, so the browser cannot auto-read the CSV until you grant access. On GitHub Pages this will load normally. For local preview, use “Choose local CSV” once, or run a small local web server.",
+            { showPicker: true, showReload: true }
+          );
+        } else {
+          setError(`Unable to load ${CSV_FILE}. ${error.message}`, { showReload: true });
+        }
+        elements.refreshDetail.textContent = "Waiting for the next refresh attempt.";
+      }
+    }
+
+    elements.searchInput.addEventListener("input", (event) => {
+      state.filters.search = event.target.value.trim();
+      applyFilters();
+    });
+
+    elements.categoryFilter.addEventListener("change", (event) => {
+      state.filters.category = event.target.value;
+      applyFilters();
+    });
+
+    elements.stateFilter.addEventListener("change", (event) => {
+      state.filters.state = event.target.value;
+      applyFilters();
+    });
+
+    elements.sortSelect.addEventListener("change", (event) => {
+      state.filters.sort = event.target.value;
+      applyFilters();
+    });
+
+    elements.pickFileButton.addEventListener("click", async () => {
+      try {
+        const loadedImmediately = await chooseLocalCsv();
+        if (loadedImmediately) {
+          await loadCsv();
+        }
+      } catch (error) {
+        setError(`Local CSV selection failed. ${error.message}`, { showPicker: true, showReload: true });
+      }
+    });
+
+    elements.reloadButton.addEventListener("click", () => {
+      loadCsv();
+    });
+
+    elements.fileInput.addEventListener("change", (event) => {
+      const [file] = event.target.files || [];
+      loadSelectedFile(file);
+    });
+
+    loadCsv();
+    state.refreshTimer = window.setInterval(loadCsv, REFRESH_INTERVAL_MS);
+  </script>
+</body>
+</html>
