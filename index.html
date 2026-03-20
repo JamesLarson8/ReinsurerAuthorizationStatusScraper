@@ -60,7 +60,7 @@
     }
 
     main {
-      width: min(1400px, calc(100% - 28px));
+      width: min(1580px, calc(100% - 24px));
       margin: 0 auto;
       padding: 32px 0 48px;
     }
@@ -995,16 +995,25 @@
       elements.resultCopy.textContent = visibleText;
     }
 
-    function updateRefreshMeta(refreshedAt, signatureChanged) {
+    function updateRefreshMeta(displayedAt, signatureChanged, usedFileTimestamp) {
       const formattedTime = new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
         hour: "numeric",
         minute: "2-digit"
-      }).format(refreshedAt);
+      }).format(displayedAt);
 
       elements.refreshTime.textContent = formattedTime;
+      if (usedFileTimestamp) {
+        elements.refreshDetail.textContent = signatureChanged
+          ? "Showing the CSV file's last modified time."
+          : "Using the CSV file's last modified time.";
+        return;
+      }
+
       elements.refreshDetail.textContent = signatureChanged
-        ? "Detected a CSV change and refreshed the table."
-        : "Checked for updates and kept the current table in sync.";
+        ? "Server file timestamp was unavailable, so this shows the latest check time."
+        : "Server file timestamp was unavailable, so this shows the latest check time.";
     }
 
     function setError(message, options = {}) {
@@ -1034,9 +1043,12 @@
     async function getLocalFileText() {
       if (state.localFileHandle && typeof state.localFileHandle.getFile === "function") {
         const file = await state.localFileHandle.getFile();
-      state.localFileName = file.name || CSV_CANDIDATES[0];
-      updateSourceLabels(state.localFileName);
-      return file.text();
+        state.localFileName = file.name || CSV_CANDIDATES[0];
+        updateSourceLabels(state.localFileName);
+        return {
+          text: await file.text(),
+          modifiedAt: typeof file.lastModified === "number" ? new Date(file.lastModified) : null
+        };
       }
 
       throw new Error("No local CSV has been selected yet.");
@@ -1088,7 +1100,15 @@
         if (response.ok) {
           state.localFileName = candidate;
           updateSourceLabels(candidate);
-          return response.text();
+          const lastModifiedHeader = response.headers && typeof response.headers.get === "function"
+            ? response.headers.get("last-modified")
+            : null;
+          const modifiedAt = lastModifiedHeader ? new Date(lastModifiedHeader) : null;
+
+          return {
+            text: await response.text(),
+            modifiedAt: modifiedAt instanceof Date && !Number.isNaN(modifiedAt.valueOf()) ? modifiedAt : null
+          };
         }
         lastError = new Error(`${candidate} returned status ${response.status}.`);
       }
@@ -1098,7 +1118,8 @@
 
     async function loadCsv() {
       try {
-        const text = await getCsvText();
+        const payload = await getCsvText();
+        const text = payload.text;
         const signature = `${text.length}:${text.slice(0, 400)}`;
         const signatureChanged = signature !== state.lastSignature;
         state.lastSignature = signature;
@@ -1124,7 +1145,7 @@
         );
         syncSortOptions();
         applyFilters();
-        updateRefreshMeta(new Date(), signatureChanged);
+        updateRefreshMeta(payload.modifiedAt || new Date(), signatureChanged, Boolean(payload.modifiedAt));
       } catch (error) {
         if (window.location.protocol === "file:") {
           setError(
