@@ -605,7 +605,10 @@
   </main>
 
   <script>
-    const CSV_FILE = "floir_reinsurer_authorization_status_florida.csv";
+    const CSV_CANDIDATES = [
+      "Reinsurer Authoization Statuses.csv",
+      "floir_reinsurer_authorization_status_florida.csv"
+    ];
     const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
     const PRIORITY_COLUMNS = [
       "reinsurer",
@@ -659,7 +662,7 @@
     };
 
     if (elements.sourceFile) {
-      elements.sourceFile.textContent = CSV_FILE;
+      elements.sourceFile.textContent = CSV_CANDIDATES[0];
     }
 
     function normalizeHeader(header) {
@@ -1022,7 +1025,7 @@
     }
 
     function updateSourceLabels(fileName) {
-      const label = fileName || CSV_FILE;
+      const label = fileName || CSV_CANDIDATES[0];
       if (elements.sourceFile) {
         elements.sourceFile.textContent = label;
       }
@@ -1031,9 +1034,9 @@
     async function getLocalFileText() {
       if (state.localFileHandle && typeof state.localFileHandle.getFile === "function") {
         const file = await state.localFileHandle.getFile();
-        state.localFileName = file.name || CSV_FILE;
-        updateSourceLabels(state.localFileName);
-        return file.text();
+      state.localFileName = file.name || CSV_CANDIDATES[0];
+      updateSourceLabels(state.localFileName);
+      return file.text();
       }
 
       throw new Error("No local CSV has been selected yet.");
@@ -1068,7 +1071,7 @@
           return file;
         }
       };
-      state.localFileName = file.name || CSV_FILE;
+      state.localFileName = file.name || CSV_CANDIDATES[0];
       updateSourceLabels(state.localFileName);
       loadCsv();
     }
@@ -1078,11 +1081,19 @@
         return getLocalFileText();
       }
 
-      const response = await fetch(`${CSV_FILE}?t=${Date.now()}`, { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}.`);
+      let lastError = null;
+
+      for (const candidate of CSV_CANDIDATES) {
+        const response = await fetch(`${candidate}?t=${Date.now()}`, { cache: "no-store" });
+        if (response.ok) {
+          state.localFileName = candidate;
+          updateSourceLabels(candidate);
+          return response.text();
+        }
+        lastError = new Error(`${candidate} returned status ${response.status}.`);
       }
-      return response.text();
+
+      throw lastError || new Error("No CSV source could be loaded.");
     }
 
     async function loadCsv() {
@@ -1121,7 +1132,7 @@
             { showPicker: true, showReload: true }
           );
         } else {
-          setError(`Unable to load ${CSV_FILE}. ${error.message}`, { showReload: true });
+          setError(`Unable to load CSV data. ${error.message}`, { showReload: true });
         }
         elements.refreshDetail.textContent = "Waiting for the next refresh attempt.";
       }
