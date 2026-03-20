@@ -606,9 +606,11 @@
 
   <script>
     const CSV_CANDIDATES = [
+      "Reinsurer_authorization_statuses.csv",
       "Reinsurer Authoization Statuses.csv",
       "floir_reinsurer_authorization_status_florida.csv"
     ];
+    const LAST_UPDATED_FILE = "last_updated.txt";
     const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
     const PRIORITY_COLUMNS = [
       "reinsurer",
@@ -995,7 +997,7 @@
       elements.resultCopy.textContent = visibleText;
     }
 
-    function updateRefreshMeta(displayedAt, signatureChanged, usedFileTimestamp) {
+    function updateRefreshMeta(displayedAt, sourceLabel) {
       const formattedTime = new Intl.DateTimeFormat(undefined, {
         month: "short",
         day: "numeric",
@@ -1004,16 +1006,7 @@
       }).format(displayedAt);
 
       elements.refreshTime.textContent = formattedTime;
-      if (usedFileTimestamp) {
-        elements.refreshDetail.textContent = signatureChanged
-          ? "Showing the CSV file's last modified time."
-          : "Using the CSV file's last modified time.";
-        return;
-      }
-
-      elements.refreshDetail.textContent = signatureChanged
-        ? "Server file timestamp was unavailable, so this shows the latest check time."
-        : "Server file timestamp was unavailable, so this shows the latest check time.";
+      elements.refreshDetail.textContent = sourceLabel;
     }
 
     function setError(message, options = {}) {
@@ -1088,6 +1081,44 @@
       loadCsv();
     }
 
+    function parseTimestampText(text) {
+      const raw = String(text || "").trim();
+      if (!raw) {
+        return null;
+      }
+
+      const candidates = [
+        raw,
+        ...(raw.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?/g) || []),
+        ...(raw.match(/\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?(?:\s?(?:UTC|GMT|Z))?/g) || []),
+        ...(raw.match(/[A-Z][a-z]{2,8}\s+\d{1,2},\s+\d{4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|UTC|GMT)?)?/g) || [])
+      ];
+
+      for (const candidate of [...new Set(candidates)]) {
+        const normalized = candidate.replace(/\bUTC\b/g, "GMT").trim();
+        const parsed = new Date(normalized);
+        if (!Number.isNaN(parsed.valueOf())) {
+          return parsed;
+        }
+      }
+
+      return null;
+    }
+
+    async function getUpdatedAtFromTextFile() {
+      if (window.location.protocol === "file:") {
+        return null;
+      }
+
+      const response = await fetch(`${LAST_UPDATED_FILE}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) {
+        return null;
+      }
+
+      const text = await response.text();
+      return parseTimestampText(text);
+    }
+
     async function getCsvText() {
       if (window.location.protocol === "file:") {
         return getLocalFileText();
@@ -1104,10 +1135,12 @@
             ? response.headers.get("last-modified")
             : null;
           const modifiedAt = lastModifiedHeader ? new Date(lastModifiedHeader) : null;
+          const updatedAtFromTextFile = await getUpdatedAtFromTextFile();
 
           return {
             text: await response.text(),
-            modifiedAt: modifiedAt instanceof Date && !Number.isNaN(modifiedAt.valueOf()) ? modifiedAt : null
+            modifiedAt: updatedAtFromTextFile || (modifiedAt instanceof Date && !Number.isNaN(modifiedAt.valueOf()) ? modifiedAt : null),
+            modifiedSource: updatedAtFromTextFile ? "Using the timestamp from last_updated.txt." : (modifiedAt instanceof Date && !Number.isNaN(modifiedAt.valueOf()) ? "Using the CSV file's last modified time." : "Timestamp file was unavailable, so this shows the latest check time.")
           };
         }
         lastError = new Error(`${candidate} returned status ${response.status}.`);
@@ -1145,7 +1178,7 @@
         );
         syncSortOptions();
         applyFilters();
-        updateRefreshMeta(payload.modifiedAt || new Date(), signatureChanged, Boolean(payload.modifiedAt));
+        updateRefreshMeta(payload.modifiedAt || new Date(), payload.modifiedSource || "Timestamp file was unavailable, so this shows the latest check time.");
       } catch (error) {
         if (window.location.protocol === "file:") {
           setError(
