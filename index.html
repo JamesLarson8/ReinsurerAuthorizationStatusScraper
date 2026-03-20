@@ -60,7 +60,7 @@
     }
 
     main {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1400px, calc(100% - 28px));
       margin: 0 auto;
       padding: 32px 0 48px;
     }
@@ -522,7 +522,6 @@
 <body>
   <main>
     <section class="hero">
-      <div class="eyebrow">Florida Reinsurance Monitor</div>
       <h1>Reinsurer authorization statuses</h1>
     </section>
 
@@ -602,11 +601,6 @@
       </div>
 
       <div class="mobile-cards" id="mobile-cards"></div>
-
-      <div class="table-footer">
-        <span id="footer-copy">Defensive parsing enabled for quoted CSV values, blank fields, and future column changes.</span>
-        <span>Auto-refresh source: <code id="footer-file">floir_reinsurer_authorization_status_florida.csv</code></span>
-      </div>
     </section>
   </main>
 
@@ -627,7 +621,6 @@
 
     const elements = {
       sourceFile: document.getElementById("source-file"),
-      footerFile: document.getElementById("footer-file"),
       loadState: document.getElementById("load-state"),
       errorNotice: document.getElementById("error-notice"),
       errorMessage: document.getElementById("error-message"),
@@ -644,7 +637,6 @@
       categoryFilter: document.getElementById("category-filter"),
       stateFilter: document.getElementById("state-filter"),
       sortSelect: document.getElementById("sort-select"),
-      footerCopy: document.getElementById("footer-copy"),
       pickFileButton: document.getElementById("pick-file-button"),
       reloadButton: document.getElementById("reload-button"),
       fileInput: document.getElementById("file-input")
@@ -668,9 +660,6 @@
 
     if (elements.sourceFile) {
       elements.sourceFile.textContent = CSV_FILE;
-    }
-    if (elements.footerFile) {
-      elements.footerFile.textContent = CSV_FILE;
     }
 
     function normalizeHeader(header) {
@@ -1037,9 +1026,6 @@
       if (elements.sourceFile) {
         elements.sourceFile.textContent = label;
       }
-      if (elements.footerFile) {
-        elements.footerFile.textContent = label;
-      }
     }
 
     async function getLocalFileText() {
@@ -1128,7 +1114,6 @@
         syncSortOptions();
         applyFilters();
         updateRefreshMeta(new Date(), signatureChanged);
-        elements.footerCopy.textContent = `Defensive parsing enabled for ${state.rows.length} rows, ${state.displayHeaders.length} columns, quoted CSV values, blank fields, and future column changes.`;
       } catch (error) {
         if (window.location.protocol === "file:") {
           setError(
