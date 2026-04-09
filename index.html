@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Reinsurer Authorization Statuses</title>
   <style>
     :root {
@@ -628,8 +631,8 @@
       </article>
       <article class="card summary-card">
         <div class="summary-label">Last Refresh</div>
-        <div class="summary-value" id="refresh-time">--</div>
-        <div class="summary-detail" id="refresh-detail">Attempting initial load.</div>
+        <div class="summary-value" id="refresh-time">Apr 9, 1:59 PM</div>
+        <div class="summary-detail" id="refresh-detail">UI build pushed Apr 9, 2026 1:59:39 PM EDT.</div>
       </article>
     </section>
 
@@ -718,6 +721,8 @@
   </main>
 
   <script>
+    const UI_BUILD_LABEL = "Apr 9, 2026 1:59:39 PM EDT";
+    const UI_BUILD_TIMESTAMP = new Date("2026-04-09T13:59:39-04:00");
     const CSV_CANDIDATES = [
       "Reinsurer_authorization_statuses.csv",
       "Reinsurer Authoization Statuses.csv",
@@ -1259,7 +1264,7 @@
       }).format(displayedAt);
 
       elements.refreshTime.textContent = formattedTime;
-      elements.refreshDetail.textContent = sourceLabel;
+      elements.refreshDetail.textContent = `${sourceLabel} UI build pushed ${UI_BUILD_LABEL}.`;
     }
 
     function setError(message, options = {}) {
@@ -1431,7 +1436,10 @@
         );
         syncSortOptions();
         applyFilters();
-        updateRefreshMeta(payload.modifiedAt || new Date(), payload.modifiedSource || "Timestamp file was unavailable, so this shows the latest check time.");
+        updateRefreshMeta(
+          payload.modifiedAt || UI_BUILD_TIMESTAMP,
+          payload.modifiedSource || "Timestamp file was unavailable, so this shows the latest check time."
+        );
       } catch (error) {
         if (window.location.protocol === "file:") {
           setError(
