@@ -299,56 +299,19 @@
     .table-shell {
       position: relative;
       max-width: 100%;
-      overflow-x: clip;
-      overflow-y: visible;
-    }
-
-    .table-frame {
-      max-width: 100%;
-      overflow-x: hidden;
-      overflow-y: visible;
-      border-top: 1px solid var(--line);
-    }
-
-    .table-header-shell {
-      position: relative;
-      z-index: 12;
-      background: rgba(241, 247, 255, 0.96);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 1px 0 var(--line);
-    }
-
-    .table-header-shell.is-fixed {
-      position: fixed;
-      top: var(--sticky-top-offset);
-    }
-
-    .table-header-spacer {
-      height: 0;
-    }
-
-    .table-header-scroller,
-    .table-scroller {
-      width: 100%;
-      max-width: 100%;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior-x: contain;
-      scrollbar-width: none;
-    }
-
-    .table-header-scroller {
       overflow: hidden;
     }
 
-    .table-scroller {
-      overflow-x: auto;
-      overflow-y: visible;
-    }
-
-    .table-header-scroller::-webkit-scrollbar,
-    .table-scroller::-webkit-scrollbar {
-      width: 0;
-      height: 0;
+    .table-pane {
+      max-width: 100%;
+      max-height: min(72vh, calc(100vh - 260px));
+      overflow: auto;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable both-edges;
+      background: rgba(255, 255, 255, 0.3);
     }
 
     .data-table {
@@ -381,7 +344,12 @@
     }
 
     th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
       background: rgba(241, 247, 255, 0.96);
+      backdrop-filter: blur(14px);
+      box-shadow: inset 0 -1px 0 rgba(8, 87, 195, 0.12);
       color: var(--muted);
       font-size: 0.68rem;
       font-weight: 800;
@@ -403,51 +371,24 @@
       font-weight: 700;
     }
 
-    .table-scrollbar {
-      padding: 2px 18px 18px;
-    }
-
-    .table-scrollbar.is-fixed {
-      position: fixed;
-      z-index: 12;
-      bottom: var(--sticky-bottom-offset);
-      padding: 0;
-    }
-
-    .table-scrollbar-track {
-      position: relative;
-      width: 100%;
-      height: 24px;
-      border-radius: 999px;
-      background: rgba(8, 87, 195, 0.16);
-      box-shadow: inset 0 0 0 1px rgba(8, 87, 195, 0.08);
-      cursor: pointer;
-      touch-action: none;
-    }
-
-    .table-scrollbar-thumb {
-      position: absolute;
-      top: 3px;
-      left: 0;
+    .table-pane::-webkit-scrollbar {
+      width: 18px;
       height: 18px;
-      min-width: 84px;
+    }
+
+    .table-pane::-webkit-scrollbar-track {
+      background: rgba(8, 87, 195, 0.1);
       border-radius: 999px;
+    }
+
+    .table-pane::-webkit-scrollbar-thumb {
+      background: rgba(8, 87, 195, 0.34);
+      border: 3px solid rgba(255, 255, 255, 0.75);
+      border-radius: 999px;
+    }
+
+    .table-pane::-webkit-scrollbar-thumb:hover {
       background: rgba(8, 87, 195, 0.5);
-      box-shadow: 0 6px 14px rgba(8, 87, 195, 0.18);
-      cursor: grab;
-      touch-action: none;
-    }
-
-    .table-scrollbar-thumb.is-dragging {
-      cursor: grabbing;
-      background: rgba(8, 87, 195, 0.68);
-    }
-
-    .table-header-shell.is-fixed,
-    .table-scrollbar.is-fixed {
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 12px 30px rgba(8, 87, 195, 0.16);
     }
 
     .empty-cell {
@@ -623,8 +564,8 @@
         align-items: flex-start;
       }
 
-      .table-scroller {
-        display: block;
+      .table-pane {
+        max-height: min(68vh, calc(100vh - 220px));
       }
 
       .mobile-cards {
@@ -647,8 +588,8 @@
       </article>
       <article class="card summary-card">
         <div class="summary-label">Last Refresh</div>
-        <div class="summary-value" id="refresh-time">Apr 9, 1:59 PM</div>
-        <div class="summary-detail" id="refresh-detail">UI build pushed Apr 9, 2026 1:59:39 PM EDT.</div>
+        <div class="summary-value" id="refresh-time">Apr 9, 2:26 PM</div>
+        <div class="summary-detail" id="refresh-detail">UI build pushed Apr 9, 2026 2:26:52 PM EDT.</div>
       </article>
     </section>
 
@@ -705,31 +646,13 @@
         <div id="column-copy">Columns will appear after the CSV loads.</div>
       </div>
 
-      <div class="table-frame">
-        <div class="table-header-shell">
-          <div class="table-header-scroller" id="table-header-scroller">
-            <table class="data-table" id="table-header-table" aria-hidden="true">
-              <colgroup id="table-head-colgroup"></colgroup>
-              <thead>
-                <tr id="table-head"></tr>
-              </thead>
-            </table>
-          </div>
-        </div>
-        <div class="table-header-spacer" id="table-header-spacer" aria-hidden="true"></div>
-
-        <div class="table-scroller" id="table-scroller">
-          <table class="data-table" id="data-table">
-            <colgroup id="table-body-colgroup"></colgroup>
-            <tbody id="table-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="table-scrollbar" aria-hidden="true">
-        <div class="table-scrollbar-track" id="table-scrollbar-track">
-          <div class="table-scrollbar-thumb" id="table-scrollbar-thumb"></div>
-        </div>
+      <div class="table-pane" id="table-pane">
+        <table class="data-table" id="data-table">
+          <thead>
+            <tr id="table-head"></tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
       </div>
 
       <div class="mobile-cards" id="mobile-cards"></div>
@@ -737,8 +660,8 @@
   </main>
 
   <script>
-    const UI_BUILD_LABEL = "Apr 9, 2026 1:59:39 PM EDT";
-    const UI_BUILD_TIMESTAMP = new Date("2026-04-09T13:59:39-04:00");
+    const UI_BUILD_LABEL = "Apr 9, 2026 2:26:52 PM EDT";
+    const UI_BUILD_TIMESTAMP = new Date("2026-04-09T14:26:52-04:00");
     const CSV_CANDIDATES = [
       "Reinsurer_authorization_statuses.csv",
       "Reinsurer Authoization Statuses.csv",
@@ -769,21 +692,10 @@
       refreshDetail: document.getElementById("refresh-detail"),
       resultCopy: document.getElementById("result-copy"),
       columnCopy: document.getElementById("column-copy"),
-      tableShell: document.querySelector(".table-shell"),
-      tableFrame: document.querySelector(".table-frame"),
-      tableHeaderShell: document.querySelector(".table-header-shell"),
-      tableHeaderScroller: document.getElementById("table-header-scroller"),
-      tableHeaderSpacer: document.getElementById("table-header-spacer"),
-      tableHeaderTable: document.getElementById("table-header-table"),
-      tableScroller: document.getElementById("table-scroller"),
-      tableHeadColgroup: document.getElementById("table-head-colgroup"),
-      tableBodyColgroup: document.getElementById("table-body-colgroup"),
+      tablePane: document.getElementById("table-pane"),
       dataTable: document.getElementById("data-table"),
       tableHead: document.getElementById("table-head"),
       tableBody: document.getElementById("table-body"),
-      tableScrollbar: document.querySelector(".table-scrollbar"),
-      tableScrollbarTrack: document.getElementById("table-scrollbar-track"),
-      tableScrollbarThumb: document.getElementById("table-scrollbar-thumb"),
       mobileCards: document.getElementById("mobile-cards"),
       searchInput: document.getElementById("search-input"),
       categoryFilter: document.getElementById("category-filter"),
@@ -806,8 +718,6 @@
       },
       lastSignature: "",
       refreshTimer: null,
-      scrollbarDrag: null,
-      syncingScroll: false,
       localFileHandle: null,
       localFileName: ""
     };
@@ -1011,176 +921,11 @@
       });
     }
 
-    function getColumnWidth(header, index) {
-      if (index === 0) {
-        return 220;
-      }
+    function queueScrollbarSync() {}
 
-      if (/notes|source_section/.test(header)) {
-        return 220;
-      }
+    function queueStickyHeaderSync() {}
 
-      if (/authorization_status|category|jurisdiction|years|lines|state/.test(header)) {
-        return 160;
-      }
-
-      return 132;
-    }
-
-    function renderColgroups() {
-      const markup = state.displayHeaders
-        .map((header, index) => `<col style="width:${getColumnWidth(header, index)}px">`)
-        .join("");
-
-      elements.tableHeadColgroup.innerHTML = markup;
-      elements.tableBodyColgroup.innerHTML = markup;
-    }
-
-    function syncHeaderTableWidth() {
-      if (!elements.tableHeaderTable || !elements.dataTable) {
-        return;
-      }
-
-      const width = elements.dataTable.scrollWidth;
-      elements.tableHeaderTable.style.width = `${width}px`;
-      elements.tableHeaderTable.style.minWidth = `${width}px`;
-    }
-
-    function clamp(value, min, max) {
-      return Math.min(Math.max(value, min), max);
-    }
-
-    function getTableMetrics() {
-      const viewportWidth = elements.tableScroller ? elements.tableScroller.clientWidth : 0;
-      const contentWidth = elements.dataTable ? elements.dataTable.scrollWidth : 0;
-      const trackWidth = elements.tableScrollbarTrack ? elements.tableScrollbarTrack.clientWidth : 0;
-      const maxScrollLeft = Math.max(contentWidth - viewportWidth, 0);
-      const thumbWidth = trackWidth > 0 && contentWidth > 0
-        ? (maxScrollLeft > 0 ? Math.max((viewportWidth / contentWidth) * trackWidth, 56) : trackWidth)
-        : 0;
-      const maxThumbOffset = Math.max(trackWidth - thumbWidth, 0);
-
-      return {
-        viewportWidth,
-        contentWidth,
-        trackWidth,
-        maxScrollLeft,
-        thumbWidth,
-        maxThumbOffset
-      };
-    }
-
-    function syncTableScrollbar() {
-      if (!elements.tableScrollbarThumb || !elements.tableScrollbarTrack) {
-        return;
-      }
-
-      const metrics = getTableMetrics();
-      const thumbWidth = Math.max(metrics.thumbWidth, 0);
-      const thumbOffset = metrics.maxScrollLeft > 0
-        ? (elements.tableScroller.scrollLeft / metrics.maxScrollLeft) * metrics.maxThumbOffset
-        : 0;
-
-      elements.tableScrollbarThumb.style.width = `${thumbWidth}px`;
-      elements.tableScrollbarThumb.style.left = `${thumbOffset}px`;
-      elements.tableScrollbarThumb.style.opacity = metrics.trackWidth > 0 ? "1" : "0";
-    }
-
-    function setTableScrollFromThumbOffset(thumbOffset) {
-      const metrics = getTableMetrics();
-      const nextOffset = clamp(thumbOffset, 0, metrics.maxThumbOffset);
-      const nextScrollLeft = metrics.maxThumbOffset > 0
-        ? (nextOffset / metrics.maxThumbOffset) * metrics.maxScrollLeft
-        : 0;
-
-      syncHorizontalScroll(nextScrollLeft);
-      syncTableScrollbar();
-    }
-
-    function queueScrollbarSync() {
-      window.requestAnimationFrame(syncTableScrollbar);
-    }
-
-    function syncHeaderOffset() {
-      if (!elements.tableHeaderTable || !elements.tableScroller) {
-        return;
-      }
-
-      elements.tableHeaderTable.style.transform = `translateX(${-elements.tableScroller.scrollLeft}px)`;
-    }
-
-    function syncStickyHeader() {
-      if (!elements.tableHeaderShell || !elements.tableScroller || !elements.tableFrame) {
-        return;
-      }
-
-      const frameRect = elements.tableFrame.getBoundingClientRect();
-      const scrollerRect = elements.tableScroller.getBoundingClientRect();
-      const headerHeight = elements.tableHeaderShell.offsetHeight;
-      const topOffset = 10;
-      const shouldFix = frameRect.top <= topOffset && frameRect.bottom > headerHeight + topOffset;
-
-      elements.tableHeaderShell.classList.toggle("is-fixed", shouldFix);
-      elements.tableHeaderSpacer.style.height = shouldFix ? `${headerHeight}px` : "0px";
-
-      if (shouldFix) {
-        elements.tableHeaderShell.style.left = `${scrollerRect.left}px`;
-        elements.tableHeaderShell.style.width = `${elements.tableScroller.clientWidth}px`;
-      } else {
-        elements.tableHeaderShell.style.left = "";
-        elements.tableHeaderShell.style.width = "";
-      }
-
-      syncHeaderOffset();
-    }
-
-    function queueStickyHeaderSync() {
-      window.requestAnimationFrame(syncStickyHeader);
-    }
-
-    function syncFloatingScrollbar() {
-      if (!elements.tableScrollbar || !elements.tableScroller || !elements.tableShell) {
-        return;
-      }
-
-      const shellRect = elements.tableShell.getBoundingClientRect();
-      const scrollerRect = elements.tableScroller.getBoundingClientRect();
-      const scrollbarHeight = elements.tableScrollbar.offsetHeight;
-      const bottomOffset = 10;
-      const metrics = getTableMetrics();
-      const shouldFix = metrics.maxScrollLeft > 0
-        && shellRect.top < window.innerHeight - (scrollbarHeight + bottomOffset)
-        && shellRect.bottom > window.innerHeight - (scrollbarHeight + bottomOffset);
-
-      elements.tableScrollbar.classList.toggle("is-fixed", shouldFix);
-
-      if (shouldFix) {
-        elements.tableScrollbar.style.left = `${scrollerRect.left}px`;
-        elements.tableScrollbar.style.width = `${elements.tableScroller.clientWidth}px`;
-      } else {
-        elements.tableScrollbar.style.left = "";
-        elements.tableScrollbar.style.width = "";
-      }
-    }
-
-    function queueFloatingScrollbarSync() {
-      window.requestAnimationFrame(syncFloatingScrollbar);
-    }
-
-    function syncHorizontalScroll(nextScrollLeft, source = null) {
-      if (state.syncingScroll) {
-        return;
-      }
-
-      state.syncingScroll = true;
-
-      if (source !== elements.tableScroller) {
-        elements.tableScroller.scrollLeft = nextScrollLeft;
-      }
-
-      state.syncingScroll = false;
-      syncHeaderOffset();
-    }
+    function queueFloatingScrollbarSync() {}
 
     function applyFilters() {
       const categoryKey = getCategoryKey(state.headers);
@@ -1249,19 +994,10 @@
     }
 
     function renderHead() {
-      renderColgroups();
       elements.tableHead.innerHTML = state.displayHeaders
         .map((header) => `<th scope="col">${escapeHtml(prettyLabel(header))}</th>`)
         .join("");
       elements.columnCopy.textContent = `${state.displayHeaders.length} column${state.displayHeaders.length === 1 ? "" : "s"} visible`;
-
-      window.requestAnimationFrame(() => {
-        syncHeaderTableWidth();
-        syncHeaderOffset();
-        syncTableScrollbar();
-        syncStickyHeader();
-        syncFloatingScrollbar();
-      });
     }
 
     function formatCell(header, value) {
@@ -1567,81 +1303,7 @@
       loadSelectedFile(file);
     });
 
-    elements.tableScroller.addEventListener("scroll", () => {
-      syncHorizontalScroll(elements.tableScroller.scrollLeft, elements.tableScroller);
-      syncTableScrollbar();
-      syncStickyHeader();
-      syncFloatingScrollbar();
-    });
-
-    elements.tableScrollbarTrack.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0 || event.target === elements.tableScrollbarThumb) {
-        return;
-      }
-
-      const trackRect = elements.tableScrollbarTrack.getBoundingClientRect();
-      const thumbWidth = elements.tableScrollbarThumb.offsetWidth;
-      const targetOffset = event.clientX - trackRect.left - (thumbWidth / 2);
-      setTableScrollFromThumbOffset(targetOffset);
-    });
-
-    elements.tableScrollbarThumb.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) {
-        return;
-      }
-
-      state.scrollbarDrag = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startLeft: parseFloat(elements.tableScrollbarThumb.style.left || "0")
-      };
-      elements.tableScrollbarThumb.classList.add("is-dragging");
-      elements.tableScrollbarThumb.setPointerCapture(event.pointerId);
-      event.preventDefault();
-    });
-
-    elements.tableScrollbarThumb.addEventListener("pointermove", (event) => {
-      if (!state.scrollbarDrag || state.scrollbarDrag.pointerId !== event.pointerId) {
-        return;
-      }
-
-      const delta = event.clientX - state.scrollbarDrag.startX;
-      setTableScrollFromThumbOffset(state.scrollbarDrag.startLeft + delta);
-    });
-
-    function releaseScrollbarDrag(event) {
-      if (!state.scrollbarDrag || state.scrollbarDrag.pointerId !== event.pointerId) {
-        return;
-      }
-
-      elements.tableScrollbarThumb.classList.remove("is-dragging");
-      state.scrollbarDrag = null;
-    }
-
-    elements.tableScrollbarThumb.addEventListener("pointerup", releaseScrollbarDrag);
-    elements.tableScrollbarThumb.addEventListener("pointercancel", releaseScrollbarDrag);
-    window.addEventListener("resize", queueScrollbarSync);
-    window.addEventListener("resize", queueStickyHeaderSync);
-    window.addEventListener("resize", queueFloatingScrollbarSync);
-    window.addEventListener("scroll", queueStickyHeaderSync, { passive: true });
-    window.addEventListener("scroll", queueFloatingScrollbarSync, { passive: true });
-
-    if (window.ResizeObserver) {
-      const resizeObserver = new ResizeObserver(() => {
-        syncHeaderTableWidth();
-        queueScrollbarSync();
-        queueStickyHeaderSync();
-        queueFloatingScrollbarSync();
-      });
-      resizeObserver.observe(elements.tableHeaderShell);
-      resizeObserver.observe(elements.tableScroller);
-      resizeObserver.observe(elements.dataTable);
-    }
-
     loadCsv();
-    queueScrollbarSync();
-    queueStickyHeaderSync();
-    queueFloatingScrollbarSync();
     state.refreshTimer = window.setInterval(loadCsv, REFRESH_INTERVAL_MS);
   </script>
 </body>
