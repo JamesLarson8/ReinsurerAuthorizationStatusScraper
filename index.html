@@ -31,6 +31,8 @@
       --radius-lg: 18px;
       --radius-md: 14px;
       --radius-sm: 10px;
+      --sticky-top-offset: 10px;
+      --sticky-bottom-offset: 10px;
       --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
       --font-body: "Avenir Next", "Segoe UI", sans-serif;
     }
@@ -318,7 +320,7 @@
 
     .table-header-shell.is-fixed {
       position: fixed;
-      top: 0;
+      top: var(--sticky-top-offset);
     }
 
     .table-header-spacer {
@@ -405,6 +407,13 @@
       padding: 2px 18px 18px;
     }
 
+    .table-scrollbar.is-fixed {
+      position: fixed;
+      z-index: 12;
+      bottom: var(--sticky-bottom-offset);
+      padding: 0;
+    }
+
     .table-scrollbar-track {
       position: relative;
       width: 100%;
@@ -432,6 +441,13 @@
     .table-scrollbar-thumb.is-dragging {
       cursor: grabbing;
       background: rgba(8, 87, 195, 0.68);
+    }
+
+    .table-header-shell.is-fixed,
+    .table-scrollbar.is-fixed {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(8, 87, 195, 0.16);
     }
 
     .empty-cell {
@@ -758,12 +774,14 @@
       tableHeaderShell: document.querySelector(".table-header-shell"),
       tableHeaderScroller: document.getElementById("table-header-scroller"),
       tableHeaderSpacer: document.getElementById("table-header-spacer"),
+      tableHeaderTable: document.getElementById("table-header-table"),
       tableScroller: document.getElementById("table-scroller"),
       tableHeadColgroup: document.getElementById("table-head-colgroup"),
       tableBodyColgroup: document.getElementById("table-body-colgroup"),
       dataTable: document.getElementById("data-table"),
       tableHead: document.getElementById("table-head"),
       tableBody: document.getElementById("table-body"),
+      tableScrollbar: document.querySelector(".table-scrollbar"),
       tableScrollbarTrack: document.getElementById("table-scrollbar-track"),
       tableScrollbarThumb: document.getElementById("table-scrollbar-thumb"),
       mobileCards: document.getElementById("mobile-cards"),
@@ -1018,6 +1036,16 @@
       elements.tableBodyColgroup.innerHTML = markup;
     }
 
+    function syncHeaderTableWidth() {
+      if (!elements.tableHeaderTable || !elements.dataTable) {
+        return;
+      }
+
+      const width = elements.dataTable.scrollWidth;
+      elements.tableHeaderTable.style.width = `${width}px`;
+      elements.tableHeaderTable.style.minWidth = `${width}px`;
+    }
+
     function clamp(value, min, max) {
       return Math.min(Math.max(value, min), max);
     }
@@ -1073,6 +1101,14 @@
       window.requestAnimationFrame(syncTableScrollbar);
     }
 
+    function syncHeaderOffset() {
+      if (!elements.tableHeaderTable || !elements.tableScroller) {
+        return;
+      }
+
+      elements.tableHeaderTable.style.transform = `translateX(${-elements.tableScroller.scrollLeft}px)`;
+    }
+
     function syncStickyHeader() {
       if (!elements.tableHeaderShell || !elements.tableScroller || !elements.tableFrame) {
         return;
@@ -1081,7 +1117,8 @@
       const frameRect = elements.tableFrame.getBoundingClientRect();
       const scrollerRect = elements.tableScroller.getBoundingClientRect();
       const headerHeight = elements.tableHeaderShell.offsetHeight;
-      const shouldFix = frameRect.top <= 0 && frameRect.bottom > headerHeight;
+      const topOffset = 10;
+      const shouldFix = frameRect.top <= topOffset && frameRect.bottom > headerHeight + topOffset;
 
       elements.tableHeaderShell.classList.toggle("is-fixed", shouldFix);
       elements.tableHeaderSpacer.style.height = shouldFix ? `${headerHeight}px` : "0px";
@@ -1093,10 +1130,41 @@
         elements.tableHeaderShell.style.left = "";
         elements.tableHeaderShell.style.width = "";
       }
+
+      syncHeaderOffset();
     }
 
     function queueStickyHeaderSync() {
       window.requestAnimationFrame(syncStickyHeader);
+    }
+
+    function syncFloatingScrollbar() {
+      if (!elements.tableScrollbar || !elements.tableScroller || !elements.tableShell) {
+        return;
+      }
+
+      const shellRect = elements.tableShell.getBoundingClientRect();
+      const scrollerRect = elements.tableScroller.getBoundingClientRect();
+      const scrollbarHeight = elements.tableScrollbar.offsetHeight;
+      const bottomOffset = 10;
+      const metrics = getTableMetrics();
+      const shouldFix = metrics.maxScrollLeft > 0
+        && shellRect.top < window.innerHeight - (scrollbarHeight + bottomOffset)
+        && shellRect.bottom > window.innerHeight - (scrollbarHeight + bottomOffset);
+
+      elements.tableScrollbar.classList.toggle("is-fixed", shouldFix);
+
+      if (shouldFix) {
+        elements.tableScrollbar.style.left = `${scrollerRect.left}px`;
+        elements.tableScrollbar.style.width = `${elements.tableScroller.clientWidth}px`;
+      } else {
+        elements.tableScrollbar.style.left = "";
+        elements.tableScrollbar.style.width = "";
+      }
+    }
+
+    function queueFloatingScrollbarSync() {
+      window.requestAnimationFrame(syncFloatingScrollbar);
     }
 
     function syncHorizontalScroll(nextScrollLeft, source = null) {
@@ -1110,11 +1178,8 @@
         elements.tableScroller.scrollLeft = nextScrollLeft;
       }
 
-      if (source !== elements.tableHeaderScroller) {
-        elements.tableHeaderScroller.scrollLeft = nextScrollLeft;
-      }
-
       state.syncingScroll = false;
+      syncHeaderOffset();
     }
 
     function applyFilters() {
@@ -1151,6 +1216,7 @@
       renderMobileCards(filtered);
       queueScrollbarSync();
       queueStickyHeaderSync();
+      queueFloatingScrollbarSync();
     }
 
     function uniqueValues(key) {
@@ -1188,6 +1254,14 @@
         .map((header) => `<th scope="col">${escapeHtml(prettyLabel(header))}</th>`)
         .join("");
       elements.columnCopy.textContent = `${state.displayHeaders.length} column${state.displayHeaders.length === 1 ? "" : "s"} visible`;
+
+      window.requestAnimationFrame(() => {
+        syncHeaderTableWidth();
+        syncHeaderOffset();
+        syncTableScrollbar();
+        syncStickyHeader();
+        syncFloatingScrollbar();
+      });
     }
 
     function formatCell(header, value) {
@@ -1496,11 +1570,8 @@
     elements.tableScroller.addEventListener("scroll", () => {
       syncHorizontalScroll(elements.tableScroller.scrollLeft, elements.tableScroller);
       syncTableScrollbar();
-    });
-
-    elements.tableHeaderScroller.addEventListener("scroll", () => {
-      syncHorizontalScroll(elements.tableHeaderScroller.scrollLeft, elements.tableHeaderScroller);
-      syncTableScrollbar();
+      syncStickyHeader();
+      syncFloatingScrollbar();
     });
 
     elements.tableScrollbarTrack.addEventListener("pointerdown", (event) => {
@@ -1551,12 +1622,16 @@
     elements.tableScrollbarThumb.addEventListener("pointercancel", releaseScrollbarDrag);
     window.addEventListener("resize", queueScrollbarSync);
     window.addEventListener("resize", queueStickyHeaderSync);
+    window.addEventListener("resize", queueFloatingScrollbarSync);
     window.addEventListener("scroll", queueStickyHeaderSync, { passive: true });
+    window.addEventListener("scroll", queueFloatingScrollbarSync, { passive: true });
 
     if (window.ResizeObserver) {
       const resizeObserver = new ResizeObserver(() => {
+        syncHeaderTableWidth();
         queueScrollbarSync();
         queueStickyHeaderSync();
+        queueFloatingScrollbarSync();
       });
       resizeObserver.observe(elements.tableHeaderShell);
       resizeObserver.observe(elements.tableScroller);
@@ -1566,6 +1641,7 @@
     loadCsv();
     queueScrollbarSync();
     queueStickyHeaderSync();
+    queueFloatingScrollbarSync();
     state.refreshTimer = window.setInterval(loadCsv, REFRESH_INTERVAL_MS);
   </script>
 </body>
