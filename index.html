@@ -60,7 +60,7 @@
     }
 
     main {
-      width: min(1580px, calc(100% - 24px));
+      width: min(1920px, calc(100vw - 8px));
       margin: 0 auto;
       padding: 32px 0 48px;
     }
@@ -297,19 +297,19 @@
       border-top: 1px solid var(--line);
       -webkit-overflow-scrolling: touch;
       scrollbar-gutter: stable both-edges;
-      padding-bottom: 8px;
+      padding-bottom: 4px;
     }
 
     table {
       width: max-content;
-      min-width: 1200px;
+      min-width: 1440px;
       border-collapse: collapse;
     }
 
     @supports not (width: max-content) {
       table {
         width: 100%;
-        min-width: 1200px;
+        min-width: 1440px;
       }
     }
 
@@ -348,6 +348,39 @@
     td:first-child {
       min-width: 280px;
       font-weight: 700;
+    }
+
+    .table-scrollbar {
+      padding: 0 18px 16px;
+    }
+
+    .table-scrollbar-track {
+      position: relative;
+      width: 100%;
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(8, 87, 195, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(8, 87, 195, 0.08);
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .table-scrollbar-thumb {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      height: 12px;
+      min-width: 56px;
+      border-radius: 999px;
+      background: rgba(8, 87, 195, 0.5);
+      box-shadow: 0 6px 14px rgba(8, 87, 195, 0.18);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .table-scrollbar-thumb.is-dragging {
+      cursor: grabbing;
+      background: rgba(8, 87, 195, 0.68);
     }
 
     .table-scroller::-webkit-scrollbar {
@@ -523,7 +556,7 @@
 
     @media (max-width: 720px) {
       main {
-        width: min(100% - 20px, 100%);
+        width: min(100vw - 4px, 100%);
         padding-top: 16px;
       }
 
@@ -626,12 +659,18 @@
       </div>
 
       <div class="table-scroller">
-        <table>
+        <table id="data-table">
           <thead>
             <tr id="table-head"></tr>
           </thead>
           <tbody id="table-body"></tbody>
         </table>
+      </div>
+
+      <div class="table-scrollbar" aria-hidden="true">
+        <div class="table-scrollbar-track" id="table-scrollbar-track">
+          <div class="table-scrollbar-thumb" id="table-scrollbar-thumb"></div>
+        </div>
       </div>
 
       <div class="mobile-cards" id="mobile-cards"></div>
@@ -669,8 +708,12 @@
       refreshDetail: document.getElementById("refresh-detail"),
       resultCopy: document.getElementById("result-copy"),
       columnCopy: document.getElementById("column-copy"),
+      tableScroller: document.querySelector(".table-scroller"),
+      dataTable: document.getElementById("data-table"),
       tableHead: document.getElementById("table-head"),
       tableBody: document.getElementById("table-body"),
+      tableScrollbarTrack: document.getElementById("table-scrollbar-track"),
+      tableScrollbarThumb: document.getElementById("table-scrollbar-thumb"),
       mobileCards: document.getElementById("mobile-cards"),
       searchInput: document.getElementById("search-input"),
       categoryFilter: document.getElementById("category-filter"),
@@ -693,6 +736,7 @@
       },
       lastSignature: "",
       refreshTimer: null,
+      scrollbarDrag: null,
       localFileHandle: null,
       localFileName: ""
     };
@@ -896,6 +940,61 @@
       });
     }
 
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function getTableMetrics() {
+      const viewportWidth = elements.tableScroller ? elements.tableScroller.clientWidth : 0;
+      const contentWidth = elements.dataTable ? elements.dataTable.scrollWidth : 0;
+      const trackWidth = elements.tableScrollbarTrack ? elements.tableScrollbarTrack.clientWidth : 0;
+      const maxScrollLeft = Math.max(contentWidth - viewportWidth, 0);
+      const thumbWidth = trackWidth > 0 && contentWidth > 0
+        ? (maxScrollLeft > 0 ? Math.max((viewportWidth / contentWidth) * trackWidth, 56) : trackWidth)
+        : 0;
+      const maxThumbOffset = Math.max(trackWidth - thumbWidth, 0);
+
+      return {
+        viewportWidth,
+        contentWidth,
+        trackWidth,
+        maxScrollLeft,
+        thumbWidth,
+        maxThumbOffset
+      };
+    }
+
+    function syncTableScrollbar() {
+      if (!elements.tableScrollbarThumb || !elements.tableScrollbarTrack) {
+        return;
+      }
+
+      const metrics = getTableMetrics();
+      const thumbWidth = Math.max(metrics.thumbWidth, 0);
+      const thumbOffset = metrics.maxScrollLeft > 0
+        ? (elements.tableScroller.scrollLeft / metrics.maxScrollLeft) * metrics.maxThumbOffset
+        : 0;
+
+      elements.tableScrollbarThumb.style.width = `${thumbWidth}px`;
+      elements.tableScrollbarThumb.style.left = `${thumbOffset}px`;
+      elements.tableScrollbarThumb.style.opacity = metrics.trackWidth > 0 ? "1" : "0";
+    }
+
+    function setTableScrollFromThumbOffset(thumbOffset) {
+      const metrics = getTableMetrics();
+      const nextOffset = clamp(thumbOffset, 0, metrics.maxThumbOffset);
+      const nextScrollLeft = metrics.maxThumbOffset > 0
+        ? (nextOffset / metrics.maxThumbOffset) * metrics.maxScrollLeft
+        : 0;
+
+      elements.tableScroller.scrollLeft = nextScrollLeft;
+      syncTableScrollbar();
+    }
+
+    function queueScrollbarSync() {
+      window.requestAnimationFrame(syncTableScrollbar);
+    }
+
     function applyFilters() {
       const categoryKey = getCategoryKey(state.headers);
       const stateKey = getStateKey(state.headers);
@@ -928,6 +1027,7 @@
       renderSummary(filtered);
       renderTable(filtered);
       renderMobileCards(filtered);
+      queueScrollbarSync();
     }
 
     function uniqueValues(key) {
@@ -1266,7 +1366,66 @@
       loadSelectedFile(file);
     });
 
+    elements.tableScroller.addEventListener("scroll", syncTableScrollbar);
+
+    elements.tableScrollbarTrack.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || event.target === elements.tableScrollbarThumb) {
+        return;
+      }
+
+      const trackRect = elements.tableScrollbarTrack.getBoundingClientRect();
+      const thumbWidth = elements.tableScrollbarThumb.offsetWidth;
+      const targetOffset = event.clientX - trackRect.left - (thumbWidth / 2);
+      setTableScrollFromThumbOffset(targetOffset);
+    });
+
+    elements.tableScrollbarThumb.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      state.scrollbarDrag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startLeft: parseFloat(elements.tableScrollbarThumb.style.left || "0")
+      };
+      elements.tableScrollbarThumb.classList.add("is-dragging");
+      elements.tableScrollbarThumb.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+
+    elements.tableScrollbarThumb.addEventListener("pointermove", (event) => {
+      if (!state.scrollbarDrag || state.scrollbarDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const delta = event.clientX - state.scrollbarDrag.startX;
+      setTableScrollFromThumbOffset(state.scrollbarDrag.startLeft + delta);
+    });
+
+    function releaseScrollbarDrag(event) {
+      if (!state.scrollbarDrag || state.scrollbarDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      elements.tableScrollbarThumb.classList.remove("is-dragging");
+      state.scrollbarDrag = null;
+    }
+
+    elements.tableScrollbarThumb.addEventListener("pointerup", releaseScrollbarDrag);
+    elements.tableScrollbarThumb.addEventListener("pointercancel", releaseScrollbarDrag);
+    window.addEventListener("resize", queueScrollbarSync);
+
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(() => {
+        queueScrollbarSync();
+      });
+      resizeObserver.observe(elements.tableScroller);
+      resizeObserver.observe(elements.dataTable);
+    }
+
     loadCsv();
+    queueScrollbarSync();
     state.refreshTimer = window.setInterval(loadCsv, REFRESH_INTERVAL_MS);
   </script>
 </body>
