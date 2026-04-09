@@ -297,29 +297,53 @@
       overflow: visible;
     }
 
+    .table-frame {
+      max-width: 100%;
+      overflow: visible;
+      border-top: 1px solid var(--line);
+    }
+
+    .table-header-shell {
+      position: sticky;
+      top: 0;
+      z-index: 14;
+      background: rgba(241, 247, 255, 0.96);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .table-header-scroller,
     .table-scroller {
       width: 100%;
       max-width: 100%;
-      overflow-x: scroll;
+      overflow-x: auto;
       overflow-y: hidden;
-      border-top: 1px solid var(--line);
       -webkit-overflow-scrolling: touch;
-      scrollbar-gutter: stable both-edges;
       overscroll-behavior-x: contain;
-      padding-bottom: 4px;
+      scrollbar-width: none;
     }
 
-    table {
+    .table-header-scroller::-webkit-scrollbar,
+    .table-scroller::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .data-table {
       width: max-content;
       min-width: 1440px;
       border-collapse: collapse;
     }
 
     @supports not (width: max-content) {
-      table {
+      .data-table {
         width: 100%;
         min-width: 1440px;
       }
+    }
+
+    .data-table col:first-child {
+      width: 220px;
     }
 
     th,
@@ -334,18 +358,8 @@
       line-height: 1.25;
     }
 
-    thead {
-      position: sticky;
-      top: 0;
-      z-index: 6;
-    }
-
     th {
-      position: sticky;
-      top: 0;
-      z-index: 1;
       background: rgba(241, 247, 255, 0.96);
-      backdrop-filter: blur(14px);
       color: var(--muted);
       font-size: 0.68rem;
       font-weight: 800;
@@ -398,26 +412,6 @@
     .table-scrollbar-thumb.is-dragging {
       cursor: grabbing;
       background: rgba(8, 87, 195, 0.68);
-    }
-
-    .table-scroller::-webkit-scrollbar {
-      height: 18px;
-      width: 18px;
-    }
-
-    .table-scroller::-webkit-scrollbar-track {
-      background: rgba(8, 87, 195, 0.08);
-      border-radius: 999px;
-    }
-
-    .table-scroller::-webkit-scrollbar-thumb {
-      background: rgba(8, 87, 195, 0.34);
-      border: 3px solid rgba(255, 255, 255, 0.75);
-      border-radius: 999px;
-    }
-
-    .table-scroller::-webkit-scrollbar-thumb:hover {
-      background: rgba(8, 87, 195, 0.5);
     }
 
     .empty-cell {
@@ -675,13 +669,24 @@
         <div id="column-copy">Columns will appear after the CSV loads.</div>
       </div>
 
-      <div class="table-scroller">
-        <table id="data-table">
-          <thead>
-            <tr id="table-head"></tr>
-          </thead>
-          <tbody id="table-body"></tbody>
-        </table>
+      <div class="table-frame">
+        <div class="table-header-shell">
+          <div class="table-header-scroller" id="table-header-scroller">
+            <table class="data-table" id="table-header-table" aria-hidden="true">
+              <colgroup id="table-head-colgroup"></colgroup>
+              <thead>
+                <tr id="table-head"></tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+
+        <div class="table-scroller" id="table-scroller">
+          <table class="data-table" id="data-table">
+            <colgroup id="table-body-colgroup"></colgroup>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="table-scrollbar" aria-hidden="true">
@@ -725,7 +730,10 @@
       refreshDetail: document.getElementById("refresh-detail"),
       resultCopy: document.getElementById("result-copy"),
       columnCopy: document.getElementById("column-copy"),
-      tableScroller: document.querySelector(".table-scroller"),
+      tableHeaderScroller: document.getElementById("table-header-scroller"),
+      tableScroller: document.getElementById("table-scroller"),
+      tableHeadColgroup: document.getElementById("table-head-colgroup"),
+      tableBodyColgroup: document.getElementById("table-body-colgroup"),
       dataTable: document.getElementById("data-table"),
       tableHead: document.getElementById("table-head"),
       tableBody: document.getElementById("table-body"),
@@ -754,6 +762,7 @@
       lastSignature: "",
       refreshTimer: null,
       scrollbarDrag: null,
+      syncingScroll: false,
       localFileHandle: null,
       localFileName: ""
     };
@@ -957,6 +966,31 @@
       });
     }
 
+    function getColumnWidth(header, index) {
+      if (index === 0) {
+        return 220;
+      }
+
+      if (/notes|source_section/.test(header)) {
+        return 220;
+      }
+
+      if (/authorization_status|category|jurisdiction|years|lines|state/.test(header)) {
+        return 160;
+      }
+
+      return 132;
+    }
+
+    function renderColgroups() {
+      const markup = state.displayHeaders
+        .map((header, index) => `<col style="width:${getColumnWidth(header, index)}px">`)
+        .join("");
+
+      elements.tableHeadColgroup.innerHTML = markup;
+      elements.tableBodyColgroup.innerHTML = markup;
+    }
+
     function clamp(value, min, max) {
       return Math.min(Math.max(value, min), max);
     }
@@ -1004,12 +1038,30 @@
         ? (nextOffset / metrics.maxThumbOffset) * metrics.maxScrollLeft
         : 0;
 
-      elements.tableScroller.scrollLeft = nextScrollLeft;
+      syncHorizontalScroll(nextScrollLeft);
       syncTableScrollbar();
     }
 
     function queueScrollbarSync() {
       window.requestAnimationFrame(syncTableScrollbar);
+    }
+
+    function syncHorizontalScroll(nextScrollLeft, source = null) {
+      if (state.syncingScroll) {
+        return;
+      }
+
+      state.syncingScroll = true;
+
+      if (source !== elements.tableScroller) {
+        elements.tableScroller.scrollLeft = nextScrollLeft;
+      }
+
+      if (source !== elements.tableHeaderScroller) {
+        elements.tableHeaderScroller.scrollLeft = nextScrollLeft;
+      }
+
+      state.syncingScroll = false;
     }
 
     function applyFilters() {
@@ -1077,6 +1129,7 @@
     }
 
     function renderHead() {
+      renderColgroups();
       elements.tableHead.innerHTML = state.displayHeaders
         .map((header) => `<th scope="col">${escapeHtml(prettyLabel(header))}</th>`)
         .join("");
@@ -1383,7 +1436,15 @@
       loadSelectedFile(file);
     });
 
-    elements.tableScroller.addEventListener("scroll", syncTableScrollbar);
+    elements.tableScroller.addEventListener("scroll", () => {
+      syncHorizontalScroll(elements.tableScroller.scrollLeft, elements.tableScroller);
+      syncTableScrollbar();
+    });
+
+    elements.tableHeaderScroller.addEventListener("scroll", () => {
+      syncHorizontalScroll(elements.tableHeaderScroller.scrollLeft, elements.tableHeaderScroller);
+      syncTableScrollbar();
+    });
 
     elements.tableScrollbarTrack.addEventListener("pointerdown", (event) => {
       if (event.button !== 0 || event.target === elements.tableScrollbarThumb) {
