@@ -78,7 +78,7 @@
     .hero {
       position: relative;
       overflow: hidden;
-      padding: 32px;
+      padding: 22px 24px;
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
       background:
@@ -119,19 +119,19 @@
       margin: 0;
       max-width: 760px;
       font-family: var(--font-display);
-      font-size: clamp(2.25rem, 4vw, 4.4rem);
-      line-height: 0.98;
-      letter-spacing: -0.04em;
+      font-size: clamp(1.5rem, 2.4vw, 2.4rem);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
     }
 
     .hero p {
       position: relative;
       z-index: 1;
       max-width: 720px;
-      margin: 16px 0 0;
+      margin: 10px 0 0;
       color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.6;
+      font-size: 0.88rem;
+      line-height: 1.45;
     }
 
     .hero-meta {
@@ -176,34 +176,34 @@
     }
 
     .summary-card {
-      padding: 20px;
+      padding: 16px 18px;
     }
 
     .summary-label {
       color: var(--muted);
-      font-size: 0.82rem;
+      font-size: 0.68rem;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
     }
 
     .summary-value {
-      margin-top: 10px;
+      margin-top: 6px;
       font-family: var(--font-display);
-      font-size: clamp(1.9rem, 3vw, 3rem);
-      line-height: 1;
-      letter-spacing: -0.04em;
+      font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
     }
 
     .summary-detail {
-      margin-top: 10px;
+      margin-top: 6px;
       color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.45;
+      font-size: 0.78rem;
+      line-height: 1.35;
     }
 
     .controls {
-      padding: 20px;
+      padding: 16px 18px;
     }
 
     .controls-header {
@@ -217,14 +217,15 @@
     .controls-title {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 1.5rem;
+      font-size: 1.1rem;
       letter-spacing: -0.03em;
     }
 
     .controls-copy {
       margin: 6px 0 0;
       color: var(--muted);
-      line-height: 1.5;
+      font-size: 0.82rem;
+      line-height: 1.4;
     }
 
     .toolbar {
@@ -282,10 +283,11 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.78);
       border: 1px solid var(--line);
+      font-size: 0.78rem;
     }
 
     .dot {
@@ -588,8 +590,8 @@
       </article>
       <article class="card summary-card">
         <div class="summary-label">Last Refresh</div>
-        <div class="summary-value" id="refresh-time">Apr 9, 2:26 PM</div>
-        <div class="summary-detail" id="refresh-detail">UI build pushed Apr 9, 2026 2:26:52 PM EDT.</div>
+        <div class="summary-value" id="refresh-time">Apr 9, 2:33 PM</div>
+        <div class="summary-detail" id="refresh-detail">UI build pushed Apr 9, 2026 2:33:37 PM EDT.</div>
       </article>
     </section>
 
@@ -660,8 +662,8 @@
   </main>
 
   <script>
-    const UI_BUILD_LABEL = "Apr 9, 2026 2:26:52 PM EDT";
-    const UI_BUILD_TIMESTAMP = new Date("2026-04-09T14:26:52-04:00");
+    const UI_BUILD_LABEL = "Apr 9, 2026 2:33:37 PM EDT";
+    const UI_BUILD_TIMESTAMP = new Date("2026-04-09T14:33:37-04:00");
     const CSV_CANDIDATES = [
       "Reinsurer_authorization_statuses.csv",
       "Reinsurer Authoization Statuses.csv",
