@@ -294,33 +294,50 @@
     .table-shell {
       position: relative;
       max-width: 100%;
-      overflow: visible;
+      overflow-x: clip;
+      overflow-y: visible;
     }
 
     .table-frame {
       max-width: 100%;
-      overflow: visible;
+      overflow-x: hidden;
+      overflow-y: visible;
       border-top: 1px solid var(--line);
     }
 
     .table-header-shell {
-      position: sticky;
-      top: 0;
-      z-index: 14;
+      position: relative;
+      z-index: 12;
       background: rgba(241, 247, 255, 0.96);
       backdrop-filter: blur(14px);
       box-shadow: 0 1px 0 var(--line);
+    }
+
+    .table-header-shell.is-fixed {
+      position: fixed;
+      top: 0;
+    }
+
+    .table-header-spacer {
+      height: 0;
     }
 
     .table-header-scroller,
     .table-scroller {
       width: 100%;
       max-width: 100%;
-      overflow-x: auto;
-      overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
+    }
+
+    .table-header-scroller {
+      overflow: hidden;
+    }
+
+    .table-scroller {
+      overflow-x: auto;
+      overflow-y: visible;
     }
 
     .table-header-scroller::-webkit-scrollbar,
@@ -680,6 +697,7 @@
             </table>
           </div>
         </div>
+        <div class="table-header-spacer" id="table-header-spacer" aria-hidden="true"></div>
 
         <div class="table-scroller" id="table-scroller">
           <table class="data-table" id="data-table">
@@ -730,7 +748,11 @@
       refreshDetail: document.getElementById("refresh-detail"),
       resultCopy: document.getElementById("result-copy"),
       columnCopy: document.getElementById("column-copy"),
+      tableShell: document.querySelector(".table-shell"),
+      tableFrame: document.querySelector(".table-frame"),
+      tableHeaderShell: document.querySelector(".table-header-shell"),
       tableHeaderScroller: document.getElementById("table-header-scroller"),
+      tableHeaderSpacer: document.getElementById("table-header-spacer"),
       tableScroller: document.getElementById("table-scroller"),
       tableHeadColgroup: document.getElementById("table-head-colgroup"),
       tableBodyColgroup: document.getElementById("table-body-colgroup"),
@@ -1046,6 +1068,32 @@
       window.requestAnimationFrame(syncTableScrollbar);
     }
 
+    function syncStickyHeader() {
+      if (!elements.tableHeaderShell || !elements.tableScroller || !elements.tableFrame) {
+        return;
+      }
+
+      const frameRect = elements.tableFrame.getBoundingClientRect();
+      const scrollerRect = elements.tableScroller.getBoundingClientRect();
+      const headerHeight = elements.tableHeaderShell.offsetHeight;
+      const shouldFix = frameRect.top <= 0 && frameRect.bottom > headerHeight;
+
+      elements.tableHeaderShell.classList.toggle("is-fixed", shouldFix);
+      elements.tableHeaderSpacer.style.height = shouldFix ? `${headerHeight}px` : "0px";
+
+      if (shouldFix) {
+        elements.tableHeaderShell.style.left = `${scrollerRect.left}px`;
+        elements.tableHeaderShell.style.width = `${elements.tableScroller.clientWidth}px`;
+      } else {
+        elements.tableHeaderShell.style.left = "";
+        elements.tableHeaderShell.style.width = "";
+      }
+    }
+
+    function queueStickyHeaderSync() {
+      window.requestAnimationFrame(syncStickyHeader);
+    }
+
     function syncHorizontalScroll(nextScrollLeft, source = null) {
       if (state.syncingScroll) {
         return;
@@ -1097,6 +1145,7 @@
       renderTable(filtered);
       renderMobileCards(filtered);
       queueScrollbarSync();
+      queueStickyHeaderSync();
     }
 
     function uniqueValues(key) {
@@ -1493,17 +1542,22 @@
     elements.tableScrollbarThumb.addEventListener("pointerup", releaseScrollbarDrag);
     elements.tableScrollbarThumb.addEventListener("pointercancel", releaseScrollbarDrag);
     window.addEventListener("resize", queueScrollbarSync);
+    window.addEventListener("resize", queueStickyHeaderSync);
+    window.addEventListener("scroll", queueStickyHeaderSync, { passive: true });
 
     if (window.ResizeObserver) {
       const resizeObserver = new ResizeObserver(() => {
         queueScrollbarSync();
+        queueStickyHeaderSync();
       });
+      resizeObserver.observe(elements.tableHeaderShell);
       resizeObserver.observe(elements.tableScroller);
       resizeObserver.observe(elements.dataTable);
     }
 
     loadCsv();
     queueScrollbarSync();
+    queueStickyHeaderSync();
     state.refreshTimer = window.setInterval(loadCsv, REFRESH_INTERVAL_MS);
   </script>
 </body>
