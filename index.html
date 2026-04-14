@@ -203,15 +203,15 @@
     }
 
     .controls {
-      padding: 16px 18px;
+      padding: 12px 14px;
     }
 
     .controls-header {
       display: grid;
       grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-      gap: 16px;
+      gap: 10px;
       align-items: flex-start;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .controls-title {
@@ -230,7 +230,7 @@
 
     .controls-summary {
       display: grid;
-      gap: 10px;
+      gap: 0;
       justify-items: end;
     }
 
@@ -238,14 +238,14 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 8px;
     }
 
     .summary-chip {
       display: grid;
       gap: 2px;
       min-width: 170px;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
       background: rgba(255, 255, 255, 0.72);
@@ -321,25 +321,6 @@
       padding: 0 4px 14px;
       color: var(--muted);
       font-size: 0.95rem;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.78);
-      border: 1px solid var(--line);
-      font-size: 0.78rem;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--good);
-      box-shadow: 0 0 0 5px rgba(8, 87, 195, 0.14);
     }
 
     .table-shell {
@@ -642,12 +623,7 @@
             <div class="summary-chip">
               <div class="summary-chip-label">Last Refresh</div>
               <div class="summary-chip-value" id="refresh-time">Apr 14, 11:28 AM</div>
-              <div class="summary-chip-detail" id="refresh-detail">UI build pushed Apr 14, 2026 11:28:14 AM EDT.</div>
             </div>
-          </div>
-          <div class="status-badge">
-            <span class="dot"></span>
-            <span id="load-state">Loading latest CSV</span>
           </div>
         </div>
       </div>
@@ -728,13 +704,11 @@
 
     const elements = {
       sourceFile: document.getElementById("source-file"),
-      loadState: document.getElementById("load-state"),
       errorNotice: document.getElementById("error-notice"),
       errorMessage: document.getElementById("error-message"),
       visibleCount: document.getElementById("visible-count"),
       visibleDetail: document.getElementById("visible-detail"),
       refreshTime: document.getElementById("refresh-time"),
-      refreshDetail: document.getElementById("refresh-detail"),
       resultCopy: document.getElementById("result-copy"),
       columnCopy: document.getElementById("column-copy"),
       tablePane: document.getElementById("table-pane"),
@@ -1119,14 +1093,12 @@
       }).format(displayedAt);
 
       elements.refreshTime.textContent = formattedTime;
-      elements.refreshDetail.textContent = `${sourceLabel} UI build pushed ${UI_BUILD_LABEL}.`;
     }
 
     function setError(message, options = {}) {
       const { showPicker = false, showReload = true } = options;
       elements.errorMessage.textContent = message;
       elements.errorNotice.classList.add("is-visible");
-      elements.loadState.textContent = "CSV load issue";
       elements.pickFileButton.classList.toggle("hidden", !showPicker);
       elements.reloadButton.classList.toggle("hidden", !showReload);
     }
@@ -1134,7 +1106,6 @@
     function clearError() {
       elements.errorMessage.textContent = "";
       elements.errorNotice.classList.remove("is-visible");
-      elements.loadState.textContent = "Latest CSV loaded";
       elements.pickFileButton.classList.add("hidden");
       elements.reloadButton.classList.add("hidden");
     }
@@ -1304,7 +1275,6 @@
         } else {
           setError(`Unable to load CSV data. ${error.message}`, { showReload: true });
         }
-        elements.refreshDetail.textContent = "Waiting for the next refresh attempt.";
       }
     }
 
