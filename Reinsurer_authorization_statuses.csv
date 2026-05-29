@@ -1,4 +1,4 @@
-reinsurer,authorization_category,authorization_status,state,jurisdiction,years,lines,source_section,notes
+﻿reinsurer,authorization_category,authorization_status,state,jurisdiction,years,lines,source_section,notes
 Arch Reinsurance Ltd.,Certified Reinsurer,Secure-3 (20%),Alabama,Bermuda,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: Missouri
 Endurance Specialty Insurance Ltd.,Certified Reinsurer,Secure-3 (20%),Alabama,Bermuda,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: Florida
 Fidelis Insurance Bermuda Ltd.,Certified Reinsurer,Secure-4 (50%),Alabama,Bermuda,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: Florida
@@ -7,7 +7,7 @@ Hannover Ruck SE,Certified Reinsurer,Secure-2 (10%),Alabama,Germany,Expires 12/3
 RenaissanceRe Europe AG,Certified Reinsurer,Secure-3 (20%),Alabama,Switzerland,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: New York
 Somers Re Ltd. (fka Watford Re Ltd.),Certified Reinsurer,Secure-4 (50%),Alabama,Bermuda,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: New Jersey
 XL Bermuda Ltd.,Certified Reinsurer,Secure-2 (10%),Alabama,Bermuda,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: New York
-XL Re Europe SE,Certified Reinsurer,Secure-? (10%),Alabama,Bermuda,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: New York
+XL Re Europe SE,Certified Reinsurer,Secure-2 (10%),Alabama,Ireland,Expires 12/31/2025,,Approved Certified Reinsurers PDF,Lead state: New York
 Allied World Assurance Co. Ltd.,Certified Reinsurer,Secure-3,Arkansas,,Effective 1/1/2018 | Exp 12/31/2025,Property/Casualty,Listing of Certified Reinsurers,
 Arch Reinsurance Ltd.,Certified Reinsurer,Secure-3,Arkansas,,Effective 1/1/2017 | Exp 12/31/2025,"Life, Annuities, Accident/Health, and Property/Casualty",Listing of Certified Reinsurers,
 "Chubb European Group, SE",Certified Reinsurer,Secure-2,Arkansas,,Effective 1/1/2021 | Exp 12/31/2023,"Property/Casualty, Accident and Health",Listing of Certified Reinsurers,
